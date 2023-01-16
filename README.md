@@ -1,6 +1,7 @@
 # hdns-go: An unofficial Go library for the Hetzner DNS API
 
 [![GitHub Actions status](https://github.com/fnyu/hdns-go/workflows/Continuous%20Integration/badge.svg)](https://github.com/fnyu/hdns-go/actions)
+[![GoDoc](https://godoc.org/github.com/fnyu/hdns-go/hdns?status.svg)](https://godoc.org/github.com/fnyu/hdns-go/hdns)
 
 ## Example
 
