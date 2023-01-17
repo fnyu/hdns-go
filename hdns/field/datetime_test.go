@@ -1,11 +1,10 @@
 package field
 
 import (
+	"bytes"
 	"encoding/json"
 	"testing"
 	"time"
-
-	"github.com/google/go-cmp/cmp"
 )
 
 type testHelperResponse struct {
@@ -28,18 +27,18 @@ func TestDateTimeUnmarshaling(t *testing.T) {
 		t.Errorf("expected %T, got nil", &DateTime{})
 	}
 
-	want := map[string]time.Time{
-		"created":  time.Date(2023, time.January, 13, 16, 26, 40, int(86*time.Millisecond), time.UTC),
-		"modified": time.Date(2023, time.January, 13, 16, 32, 22, int(171*time.Millisecond), time.UTC),
+	var want time.Time
+
+	want = time.Date(2023, time.January, 13, 16, 26, 40, int(86*time.Millisecond), time.UTC)
+	if !v.Created.Time.Equal(want) {
+		t.Errorf("expected %v, got %v", want, v.Modified.Time)
 	}
 
-	if ok := cmp.Equal(want["created"], *v.Created.Time); !ok {
-		t.Errorf("expected %v, got %v", want["created"], v.Created.Time)
+	want = time.Date(2023, time.January, 13, 16, 32, 22, int(171*time.Millisecond), time.UTC)
+	if !v.Modified.Time.Equal(want) {
+		t.Errorf("expected %v, got %v", want, v.Modified.Time)
 	}
 
-	if ok := cmp.Equal(want["modified"], *v.Modified.Time); !ok {
-		t.Errorf("expected %v, got %v", want["modified"], v.Modified.Time)
-	}
 }
 
 func TestDateTimeMarshaling(t *testing.T) {
@@ -55,9 +54,9 @@ func TestDateTimeMarshaling(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	want := "{\"created\":\"2023-01-13 16:26:40.086 +0000 UTC\",\"modified\":\"2023-01-13 16:32:22.171 +0000 UTC\"}"
+	want := []byte(`{"created":"2023-01-13 16:26:40.086 +0000 UTC","modified":"2023-01-13 16:32:22.171 +0000 UTC"}`)
 
-	if string(data) != want {
+	if !bytes.Equal(want, data) {
 		t.Errorf("expected %v, got %v", want, data)
 	}
 }
