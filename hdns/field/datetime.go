@@ -19,6 +19,7 @@ func (d *DateTime) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
+	// For absent values the API returns empty string
 	if v == "" {
 		return nil
 	}
@@ -33,6 +34,7 @@ func (d *DateTime) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// MarshalJSON returns either datetime as a string or empty string
 func (d *DateTime) MarshalJSON() ([]byte, error) {
 	var s string
 	if d.Time != nil {
