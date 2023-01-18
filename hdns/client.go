@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -22,6 +24,8 @@ type Client struct {
 	token      string
 	httpClient *http.Client
 	userAgent  string
+
+	Zone ZoneClient
 }
 
 // A ClientOption is used to configure a Client.
@@ -59,6 +63,8 @@ func NewClient(options ...ClientOption) *Client {
 	for _, option := range options {
 		option(client)
 	}
+
+	client.Zone = ZoneClient{client: client}
 
 	return client
 }
@@ -101,4 +107,20 @@ func (c *Client) Do(r *http.Request, v interface{}) (*http.Response, error) {
 	}
 
 	return res, nil
+}
+
+type ListOpts struct {
+	Page    int
+	PerPage int
+}
+
+func (o ListOpts) values() url.Values {
+	vals := url.Values{}
+	if o.Page > 0 {
+		vals.Add("page", strconv.Itoa(o.Page))
+	}
+	if o.PerPage > 0 {
+		vals.Add("per_page", strconv.Itoa(o.PerPage))
+	}
+	return vals
 }

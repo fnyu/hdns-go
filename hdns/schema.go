@@ -31,3 +31,13 @@ func ZoneFromSchema(s schema.Zone) *Zone {
 
 	return zone
 }
+
+// ZonesFromSchema converts a schema.Zones to []Zone
+func ZonesFromSchema(s []schema.Zone) []*Zone {
+	zones := make([]*Zone, len(s))
+	for i, zone := range s {
+		zones[i] = ZoneFromSchema(zone)
+	}
+
+	return zones
+}
