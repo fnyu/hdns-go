@@ -1,7 +1,10 @@
 package hdns
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -53,7 +56,7 @@ type ZoneClient struct {
 
 // GetByID retrieves a zone by its ID. If the zone does not exist, nil is returned.
 func (c *ZoneClient) GetByID(ctx context.Context, id string) (*Zone, *http.Response, error) {
-	req, err := c.client.NewRequest(ctx, "GET", fmt.Sprintf("/zones/%s", id), nil)
+	req, err := c.client.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/zones/%s", id), nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -101,7 +104,7 @@ func (o ZoneListOpts) values() url.Values {
 // when their value corresponds to their zero value or when they are empty.
 func (c *ZoneClient) List(ctx context.Context, opts ZoneListOpts) ([]*Zone, *http.Response, error) {
 	path := "/zones?" + opts.values().Encode()
-	req, err := c.client.NewRequest(ctx, "GET", path, nil)
+	req, err := c.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -125,4 +128,59 @@ func (c *ZoneClient) List(ctx context.Context, opts ZoneListOpts) ([]*Zone, *htt
 	}
 
 	return zones, res, nil
+}
+
+type ZoneCreateOpts struct {
+	Name string
+	Ttl  int
+}
+
+func (o ZoneCreateOpts) Validate() error {
+	if o.Name == "" {
+		return errors.New("missing name")
+	}
+	if o.Ttl < 0 {
+		return errors.New("ttl must be a positive integer")
+	}
+
+	return nil
+}
+
+// Create creates zone with specified name and default TTL
+func (c *ZoneClient) Create(ctx context.Context, opts ZoneCreateOpts) (*Zone, *http.Response, error) {
+	if err := opts.Validate(); err != nil {
+		return nil, nil, err
+	}
+
+	reqData := schema.ZoneCreateRequest{
+		Name: opts.Name,
+		Ttl:  opts.Ttl,
+	}
+	reqBody, err := json.Marshal(reqData)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	req, err := c.client.NewRequest(ctx, http.MethodPost, "/zones", bytes.NewReader(reqBody))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var body schema.ZoneResponse
+	res, err := c.client.Do(req, &body)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return ZoneFromSchema(body.Zone), res, nil
+}
+
+type ZoneUpdateOpts struct{}
+
+func (c *ZoneClient) Update(ctx context.Context, zone *Zone, opts ZoneUpdateOpts) (*Zone, *http.Response, error) {
+	return nil, nil, nil
+}
+
+func (c *ZoneClient) Delete(ctx context.Context, zone *Zone) (*http.Response, error) {
+	return nil, nil
 }
